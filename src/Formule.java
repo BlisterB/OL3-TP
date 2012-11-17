@@ -15,7 +15,7 @@ public class Formule {
 	public Formule(int op, int numeroDeVariable){
 		if(op == 0 && numeroDeVariable >= 0){
 			opPrinc = 0;
-			numeroDeVariable = numeroDeVariable;
+			this.numeroDeVariable = numeroDeVariable;
 		}
 		else throw new MonException("Probleme d'initialisation de variable");
 	}
@@ -34,6 +34,18 @@ public class Formule {
 				sousFormule2 = f2;
 			}
 			else throw new MonException("Probleme d'initialisation de variable");
+		}
+		else throw new MonException("Probleme d'initialisation de variable");
+	}
+	public Formule(int op, int[]t){
+		if(op == 2 || op == 3){
+			Formule curseur = new Formule(0, t[0]);
+			for(int i = 1; i < t.length; i ++){
+				curseur = new Formule(op, curseur, new Formule(0, t[i]));
+			}
+			opPrinc = curseur.opPrinc;
+			sousFormule1 = curseur.sousFormule1;
+			sousFormule2 = curseur.sousFormule2;
 		}
 		else throw new MonException("Probleme d'initialisation de variable");
 	}
