@@ -81,25 +81,25 @@ public class Formule {
 	}
 	
 	public boolean eval(boolean[] s){
-		if(opPrinc == 0)
+		if(isVariable())
 			if(numeroDeVariable >= 0 && numeroDeVariable < s.length)
 				return s[numeroDeVariable];
 			else return false;//Cas des variables qui n'apparaissent pas dans l'affectation
-		if(opPrinc == 1)
+		if(isNegation())
 			return !sousFormule1.eval(s);
-		if(opPrinc == 2)
+		if(isConjonction())
 			return (sousFormule1.eval(s) && sousFormule2.eval(s));
-		if(opPrinc == 3)
+		if(isDisjonction())
 			return (sousFormule1.eval(s) || sousFormule2.eval(s));
 		else return false;
 	}
 	
 	public int maxVar(){
-		if(opPrinc == 0)
+		if(isVariable())
 			return numeroDeVariable;
-		if(opPrinc == 1)
+		if(isNegation())
 			return sousFormule1.maxVar();
-		if(opPrinc == 2 || opPrinc == 3){
+		if(isConjonction() || isDisjonction()){
 			int a = sousFormule1.maxVar();
 			int b = sousFormule2.maxVar();
 			if (a >= b)
@@ -154,8 +154,92 @@ public class Formule {
 	 /**                    TP3                        //
 	/**//////////////////////////////////////////////**/
 	
+	/**Fonction qui renvoit True si la formule est en forme normale de négation **/
+	boolean isNnf(){
+		/*Alors on va parcourir la fonction de maniere récursive
+		 * Si on trouve une négation et que la sous formule est une autre négation : false
+		 * Si on trouve une négation et que la sous formule est une conjonction/disjonction : false
+		 * Sinon on continue
+		 * Si on trouve une variable, alors il n'y a eu aucun soucis : true
+		 */
+		if(isVariable())
+			return true;
+		if(isConjonction() || isDisjonction())
+			return (sousFormule1.isNnf() && sousFormule2.isNnf());
+		if(isNegation()){
+			if(sousFormule1.isVariable())
+				return true;
+			else
+				return false;
+			
+		}
+		else return false;
+	}
+	
+	/**Fonction qui applique UNE SEULE fois une des regles de mise en forme normale de négation
+	 * Elle l'applique seulement si necessaire à la BASE de la formule donnée
+	 */
+	
+	public Formule appliqueReglesNnf(){
+		/*Regle des mise en forme Nnf :
+		 * non non X -> X
+		 * non(X et Y) -> (non X ou non Y) 
+		 * non(X ou Y) -> (non X et non Y) 
+		 */
+		if(isNegation()){
+			if (sousFormule1.isNegation())
+				return sousFormule1.sousFormule1;
+			if(sousFormule1.isConjonction())
+				return new Formule(DISJ, new Formule(NEG, sousFormule1.sousFormule1)
+										,new Formule(NEG, sousFormule1.sousFormule2));
+			if(sousFormule1.isDisjonction())
+				return new Formule(CONJ, new Formule(NEG, sousFormule1.sousFormule1)
+										,new Formule(NEG, sousFormule1.sousFormule2));
+			else return this;
+		}
+		else return this;
+	}
 	
 	
+	/**Fonction qui retourne une formule équivalent en Nnf**/
+	public Formule miseEnNnf(){
+		if(isVariable()) //On renvoit directement la sous formule
+			return this;
+		if(isConjonction() || isDisjonction()){ // On continue a dérouler la formule
+			sousFormule1.miseEnNnf();
+			sousFormule2.miseEnNnf();
+			return this;
+		}
+		else{//Cas d'une négation, on applique une regle puis on continue à dérouler le programme
+			/*On a deux cas :
+			 * _Soit on a une négation de variable, donc on renvoit directement this (ça sert de terminaison de recursion)
+			 * _Soit on a une négation d'autre chose, dans ce cas on applique les regle puis on renvoit la mise en forme de la fonction créée pour dérouler la nouvelle formule 
+			 */
+			if(sousFormule1.isVariable())
+				return this;
+			else{
+				return this.appliqueReglesNnf().miseEnNnf();
+			}
+			
+		}
+		
+	}
+	
+	/**Fonction revoyant true si la formule est une clause disjonctive**/
+	public boolean isClauseDisjonctive(){
+		/*Une clause disjonctive est :
+		 * _la conjonction de zéro ou plus littéraux
+		 * Vérifions ça :
+		 */
+		if(isVariable())
+			return true;
+		if(isNegation())
+			return sousFormule1.isClauseDisjonctive();
+		if(isConjonction())
+			return sousFormule1.isClauseDisjonctive() && sousFormule2.isClauseDisjonctive();
+		else //Cad d'une disjonction : l'opération interdite dans une clause disjonctive
+			return false;
+	}
 	  /**/////////////////////////////////////////////////
 	 /**                    ACCESSEUR                  //
 	/**//////////////////////////////////////////////**/
