@@ -1,3 +1,5 @@
+import java.util.Scanner;
+
 
 public class Formule {
 	int opPrinc;
@@ -54,7 +56,7 @@ public class Formule {
 	/** Classe toString : renvoit la chaine de caracteres représentant la formule **/
 	public String toString(){
 		if(opPrinc == 0)
-			return ""+numeroDeVariable;
+			return "x"+numeroDeVariable;
 		if(opPrinc == 1)
 			return ("non " + sousFormule1.toString());
 		if(opPrinc == 2)
@@ -64,7 +66,92 @@ public class Formule {
 		else throw new MonException("Variable opPrinc non conforme");
 	}
 	
-	//Accesseurs
+	  /////////////////////////////////////////////////
+	 //                    TP2                      //
+	/////////////////////////////////////////////////
+	
+	public static boolean[] affectation (int nbAffectation){
+		Scanner sc = new Scanner(System.in);
+		boolean[] b = new boolean[nbAffectation];
+		for(int i = 0; i < b.length; i ++){
+			System.out.println("Valeurs associées à "+i+" : ");
+			b[i] = sc.nextBoolean();
+		}
+		return b;
+	}
+	
+	public boolean eval(boolean[] s){
+		if(opPrinc == 0)
+			if(numeroDeVariable >= 0 && numeroDeVariable < s.length)
+				return s[numeroDeVariable];
+			else return false;//Cas des variables qui n'apparaissent pas dans l'affectation
+		if(opPrinc == 1)
+			return !sousFormule1.eval(s);
+		if(opPrinc == 2)
+			return (sousFormule1.eval(s) && sousFormule2.eval(s));
+		if(opPrinc == 3)
+			return (sousFormule1.eval(s) || sousFormule2.eval(s));
+		else return false;
+	}
+	
+	public int maxVar(){
+		if(opPrinc == 0)
+			return numeroDeVariable;
+		if(opPrinc == 1)
+			return sousFormule1.maxVar();
+		if(opPrinc == 2 || opPrinc == 3){
+			int a = sousFormule1.maxVar();
+			int b = sousFormule2.maxVar();
+			if (a >= b)
+				return a;
+			else return b;
+		}
+		else return -1;
+	}
+	
+	/**Inititialise un tableau de false de longueur égale au numeroDeVariable maximal de la formule, en sachant que x0 est une variable**/
+	boolean[] initAffectation(){
+		boolean[] t = new boolean[this.maxVar() + 1];
+		return t;
+	}
+	
+	/**Fonction qui ajoute 1 à un tableau de nombre binaire **/
+	static boolean affSuivante(boolean[] t){
+		if(t[t.length - 1] == false){
+			t[t.length - 1] = true;
+			return true;
+		}
+		else{
+			t[t.length - 1] = false;
+			for(int i = t.length - 2; i >= 0; i--){
+				if(t[i] == false){
+					t[i] = true;
+					return true;
+				}
+				else{
+					t[i] = false;
+				}
+			}
+			return false;
+		}
+		
+	}
+	
+	/**Fonction qui calcule si une formule est satisfiable ou non**/
+	boolean isSatisfiable(){
+		boolean[] t = initAffectation();
+		if(this.eval(t))
+			return true;
+		while(affSuivante(t)){
+			if(this.eval(t))
+				return true;
+		}
+		return false;
+	}
+	
+	  /**/////////////////////////////////////////////////
+	 /**                    ACCESSEUR                  //
+	/**//////////////////////////////////////////////**/
 	public Formule getSousFormule1(){
 		return sousFormule1;
 	}
