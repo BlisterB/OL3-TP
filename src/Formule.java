@@ -234,11 +234,56 @@ public class Formule {
 		if(isVariable())
 			return true;
 		if(isNegation())
-			return sousFormule1.isClauseDisjonctive();
-		if(isConjonction())
+			if(sousFormule1.isVariable())
+				return true;
+			else return false;
+		if(isDisjonction())
 			return sousFormule1.isClauseDisjonctive() && sousFormule2.isClauseDisjonctive();
-		else //Cad d'une disjonction : l'opération interdite dans une clause disjonctive
+		else //Cad d'une conjonction : l'opération interdite dans une clause disjonctive
 			return false;
+	}
+	
+	public boolean isCnf(){
+		/*Une formule est en forme conjonctive normale si :
+		 * _elle est la conjonction de zéro ou plus clause disjonctive
+		 */
+		if(isClauseDisjonctive())
+			return true;
+		if(isConjonction()){
+			return sousFormule1.isCnf() && sousFormule2.isCnf();//On déroule la formule pour obtenir eventuellement des clauses disjonctive
+		}
+		else return false;
+	}
+	
+	Formule appliqueReglesCnf(){
+		/*On va vérfier si une des regles 4.6, 4.7, 4.15, 4,16 est applicable, puis l'appliquer */
+		//4.6 (X et Y) et Z -> X et (Y et Z)
+		if(isConjonction() && sousFormule1.isConjonction() && !sousFormule2.isConjonction() && !sousFormule2.isDisjonction())
+			return new Formule(CONJ, sousFormule1.sousFormule1
+									,new Formule(CONJ, sousFormule1.sousFormule2
+													, sousFormule2)
+								);
+		//4.7 (X ou Y) ou Z -> X ou (Y ou Z)
+		if(isDisjonction() && sousFormule1.isDisjonction() && !sousFormule2.isConjonction() && !sousFormule2.isDisjonction())
+			return new Formule(DISJ, sousFormule1.sousFormule1
+									,new Formule(DISJ, sousFormule1.sousFormule2
+													, sousFormule2)
+								);
+		//4.15 X ou (Y et Z) -> (X ou Y) et (X ou Z)
+		if(isDisjonction() && !sousFormule1.isConjonction() && !sousFormule1.isDisjonction() && sousFormule2.isDisjonction())
+			return new Formule(CONJ,
+									new Formule(DISJ, sousFormule1, sousFormule2.sousFormule1),
+									new Formule(DISJ, sousFormule1, sousFormule2.sousFormule2)
+								);
+		
+		//4.16(X et Y) ou Z -> (X ou Z) et (Y ou Z)
+		if(isDisjonction() && sousFormule1.isConjonction() && !sousFormule2.isConjonction() && !sousFormule2.isDisjonction())
+			return new Formule(CONJ,
+									new Formule(DISJ, sousFormule1.sousFormule1, sousFormule2),
+									new Formule(DISJ, sousFormule1.sousFormule2, sousFormule2)
+								);
+		
+		else return this;
 	}
 	  /**/////////////////////////////////////////////////
 	 /**                    ACCESSEUR                  //
