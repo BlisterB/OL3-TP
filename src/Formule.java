@@ -286,6 +286,7 @@ public class Formule {
 		else return this;
 	}
 	
+	/** Fonction renvoyant une formule en forme CNF, attention, il faut que cette formule soit en NNF **/
 	Formule miseEnCnf(){
 		/*Pour mettre une formule en Cnf on va effectuer les opérations suivantes :
 		 * _Supposer que la formule est en Cnf car si on appelle miseEnCnf ici elle sera appellée a chaque fois
@@ -301,8 +302,7 @@ public class Formule {
 			 * soit un litteral soit une conjonction
 			 */
 			if(isDisjonction()){
-				appliqueReglesCnf();
-				return this;
+				return appliqueReglesCnf().miseEnCnf();//On applique donc un des regles puis on rempli la fonction sur cette meme formule car il peut arriver qu'on ait encore une disjonction au final (par exemple pour ((x1 et x2) ou (x3 et x4))
 			}
 			else{//Donc c'est une conjonction
 				sousFormule1 = sousFormule1.miseEnCnf();
