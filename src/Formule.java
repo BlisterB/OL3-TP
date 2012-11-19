@@ -228,7 +228,7 @@ public class Formule {
 	/**Fonction revoyant true si la formule est une clause disjonctive**/
 	public boolean isClauseDisjonctive(){
 		/*Une clause disjonctive est :
-		 * _la conjonction de zéro ou plus littéraux
+		 * _la disjonction de zéro ou plus littéraux
 		 * Vérifions ça :
 		 */
 		if(isVariable())
@@ -246,11 +246,12 @@ public class Formule {
 	public boolean isCnf(){
 		/*Une formule est en forme conjonctive normale si :
 		 * _elle est la conjonction de zéro ou plus clause disjonctive
+		 * /!\ Ce n'est pas dis clairement mais elle doivent etre imbriquée vers la droite (4.6)
 		 */
 		if(isClauseDisjonctive())
 			return true;
 		if(isConjonction()){
-			return sousFormule1.isCnf() && sousFormule2.isCnf();//On déroule la formule pour obtenir eventuellement des clauses disjonctive
+			return (sousFormule1.isCnf() && sousFormule2.isCnf() && sousFormule1.isClauseDisjonctive());//On déroule la formule pour obtenir eventuellement des clauses disjonctive
 		}
 		else return false;
 	}
@@ -264,20 +265,20 @@ public class Formule {
 													, sousFormule2)
 								);
 		//4.7 (X ou Y) ou Z -> X ou (Y ou Z)
-		if(isDisjonction() && sousFormule1.isDisjonction())
+		else if(isDisjonction() && sousFormule1.isDisjonction())
 			return new Formule(DISJ, sousFormule1.sousFormule1
 									,new Formule(DISJ, sousFormule1.sousFormule2
 													, sousFormule2)
 								);
 		//4.15 X ou (Y et Z) -> (X ou Y) et (X ou Z)
-		if(isDisjonction() && sousFormule2.isConjonction())
+		else if(isDisjonction() && sousFormule2.isConjonction())
 			return new Formule(CONJ,
 									new Formule(DISJ, sousFormule1, sousFormule2.sousFormule1),
 									new Formule(DISJ, sousFormule1, sousFormule2.sousFormule2)
 								);
 		
 		//4.16(X et Y) ou Z -> (X ou Z) et (Y ou Z)
-		if(isDisjonction() && sousFormule1.isConjonction()){
+		else if(isDisjonction() && sousFormule1.isConjonction()){
 			return new Formule(CONJ,
 									new Formule(DISJ, sousFormule1.sousFormule1, sousFormule2),
 									new Formule(DISJ, sousFormule1.sousFormule2, sousFormule2)
@@ -291,6 +292,7 @@ public class Formule {
 		/*Pour mettre une formule en Cnf on va effectuer les opérations suivantes :
 		 * _Supposer que la formule est en Cnf car si on appelle miseEnCnf ici elle sera appellée a chaque fois
 		 * _Appliquer les regles de mise en Cnf
+		 * _S'ASSURER QUE les clause disjonctive sont bien imbriqué (4.6)
 		 */
 		if(isCnf()){
 			return this;
@@ -305,14 +307,118 @@ public class Formule {
 				return appliqueReglesCnf().miseEnCnf();//On applique donc un des regles puis on rempli la fonction sur cette meme formule car il peut arriver qu'on ait encore une disjonction au final (par exemple pour ((x1 et x2) ou (x3 et x4))
 			}
 			else{//Donc c'est une conjonction
+				//On a une conjonction, il faut donc s'assurer que les conjonctions comportent bien des clause disjonctives
 				sousFormule1 = sousFormule1.miseEnCnf();
 				sousFormule2 = sousFormule2.miseEnCnf();
+				/*Il reste un petite probleme : on peut avoir des conjonctions de clauses disjonctives mais ce n'est pas forcément
+				 * une CNF : il faut qu'elles soit imbriquée vers la droite !
+				 */
+				while(!isCnf()){
+					return appliqueReglesCnf().miseEnCnf();
+				}
 				return this;
 			}
 			
 		}
 	}
 	
+	/**Prend en argument deux tableaux de formules et retourne l'union de ces deux tableaux**/
+	Formule[] unionTableau (Formule[]t, Formule[]s){
+		Formule[] f = new Formule[t.length + s.length];
+		for(int i=0; i<t.length; i++){
+			f[i] = t[i];
+		}
+		for(int i=t.length; i<f.length; i++){
+			f[i] = s[i+t.length];
+		}
+		return f;
+	}
+	
+	/** Quand la formule est en forme normale conjonctive, retourne un tableaux des clauses disjonctive qui y apparaissent **/
+	Formule[] tableauClause(){
+		/*Il faut :
+		 * _1/déjà définir le nombre de clause disjonctives
+		 * _2/créer le tableau
+		 * _3/re traverser la formule pour le rentrer
+		 * */
+		//1
+		Formule curseur = this;//Nous sert à nous déplacer dans la formule
+		int compteur = 0;
+		if (sousFormule1 != null)//On vérifie bien que la premiere clause
+			compteur++;
+		while(curseur.sousFormule2 != null && curseur.sousFormule2.isConjonction()){
+			curseur = curseur.sousFormule2;
+			compteur++;//Ce sont les formule "à gauche" des noeuds qu'on compte.
+		}
+		if (curseur.sousFormule2 != null)//On compte la derniere disjonction "à droite". 
+			compteur++;
+		System.out.println(compteur);
+		//2
+		Formule[] t = new Formule[compteur];
+		
+		//3 On réutilise la méthode du 1
+		curseur = this;
+		compteur = 0;
+		if (sousFormule1 != null)//On vérifie bien que la premiere clause
+			t[compteur] = curseur.sousFormule1;
+			compteur++;
+		while(curseur.sousFormule2 != null && curseur.sousFormule2.isConjonction()){
+			curseur = curseur.sousFormule2;
+			t[compteur] = curseur.sousFormule1;
+			compteur++;//Ce sont les formule "à gauche" des noeuds qu'on compte.
+		}
+		if (curseur.sousFormule2 != null)//On compte la derniere disjonction "à droite".
+			t[compteur] = curseur.sousFormule2;
+		
+		return t;
+	}
+	
+	/**Quand la formule est une clause disjonctive, retourne le tableaux des littéraux qui apparaissent dans cette clause**/	
+	Formule[] tableauLitteraux(){
+		//1
+		Formule curseur = this;//Nous sert à nous déplacer dans la formule
+		int compteur = 0;
+		if (sousFormule1 != null)//On vérifie bien que la premiere clause
+			compteur++;
+		while(curseur.sousFormule2 != null && curseur.sousFormule2.isDisjonction()){
+			curseur = curseur.sousFormule2;
+			compteur++;//Ce sont les formule "à gauche" des noeuds qu'on compte.
+		}
+		if (curseur.sousFormule2 != null)//On compte la derniere disjonction "à droite". 
+			compteur++;
+		System.out.println(compteur);
+		//2
+		Formule[] t = new Formule[compteur];
+		
+		//3 On réutilise la méthode du 1
+		curseur = this;
+		compteur = 0;
+		if (sousFormule1 != null)//On vérifie bien que la premiere clause
+			t[compteur] = curseur.sousFormule1;
+			compteur++;
+		while(curseur.sousFormule2 != null && curseur.sousFormule2.isDisjonction()){
+			curseur = curseur.sousFormule2;
+			t[compteur] = curseur.sousFormule1;
+			compteur++;//Ce sont les formule "à gauche" des noeuds qu'on compte.
+		}
+		if (curseur.sousFormule2 != null)//On compte la derniere disjonction "à droite".
+			t[compteur] = curseur.sousFormule2;
+		
+		return t;
+	}
+	
+	/**Quand la formule est une clause disjonctive, retourne la ligne en format DIMACS 
+	 * qui contient les littéraux de la formule et se termine par 0 **/
+	String ligneCnf (){
+		String ligne = "";
+		Formule[] t = this.tableauLitteraux();
+		for(int i = 0; i < t.length; i++){
+			ligne += t[i].toString() + " ";
+		}
+		ligne += "0";
+		
+		return ligne;
+	}
 	  /**/////////////////////////////////////////////////
 	 /**                    ACCESSEUR                  //
 	/**//////////////////////////////////////////////**/

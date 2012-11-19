@@ -49,8 +49,17 @@ public class Main {
 		//Pas Bonne 2
 		//System.out.println("La formule est : " + pasBonne2.toString() + " Est elle en CNF " + pasBonne2.isCnf() + "Appliquons lui une regle : " + pasBonne2.miseEnNnf().miseEnCnf().toString());
 		
-		System.out.println(pasBonne3.appliqueReglesCnf().toString());
+		System.out.println(pasBonne3.miseEnNnf().miseEnCnf().toString());
 		Formule pasBonne3Corrigee = pasBonne3.miseEnNnf().miseEnCnf();
+		System.out.println(pasBonne3.miseEnNnf().miseEnCnf().isCnf());
+		
+		Formule t[] = pasBonne3Corrigee.sousFormule1.tableauLitteraux();
+		for(int i = 0; i < t.length; i++){
+			System.out.println(t[i].toString());
+		}
+
+		System.out.println(pasBonne3Corrigee.sousFormule1.ligneCnf());
+		
 		System.out.println("La formule est : " + pasBonne3.toString() + " Est elle en CNF : " + pasBonne3.isCnf() + " Appliquons lui une regle : " + pasBonne3Corrigee.toString());
 	}
 }
