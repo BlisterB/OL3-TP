@@ -206,8 +206,8 @@ public class Formule {
 		if(isVariable()) //On renvoit directement la sous formule
 			return this;
 		if(isConjonction() || isDisjonction()){ // On continue a dérouler la formule
-			sousFormule1.miseEnNnf();
-			sousFormule2.miseEnNnf();
+			sousFormule1 = sousFormule1.miseEnNnf();
+			sousFormule2 = sousFormule2.miseEnNnf();
 			return this;
 		}
 		else{//Cas d'une négation, on applique une regle puis on continue à dérouler le programme
@@ -258,33 +258,61 @@ public class Formule {
 	Formule appliqueReglesCnf(){
 		/*On va vérfier si une des regles 4.6, 4.7, 4.15, 4,16 est applicable, puis l'appliquer */
 		//4.6 (X et Y) et Z -> X et (Y et Z)
-		if(isConjonction() && sousFormule1.isConjonction() && !sousFormule2.isConjonction() && !sousFormule2.isDisjonction())
+		if(isConjonction() && sousFormule1.isConjonction())
 			return new Formule(CONJ, sousFormule1.sousFormule1
 									,new Formule(CONJ, sousFormule1.sousFormule2
 													, sousFormule2)
 								);
 		//4.7 (X ou Y) ou Z -> X ou (Y ou Z)
-		if(isDisjonction() && sousFormule1.isDisjonction() && !sousFormule2.isConjonction() && !sousFormule2.isDisjonction())
+		if(isDisjonction() && sousFormule1.isDisjonction())
 			return new Formule(DISJ, sousFormule1.sousFormule1
 									,new Formule(DISJ, sousFormule1.sousFormule2
 													, sousFormule2)
 								);
 		//4.15 X ou (Y et Z) -> (X ou Y) et (X ou Z)
-		if(isDisjonction() && !sousFormule1.isConjonction() && !sousFormule1.isDisjonction() && sousFormule2.isDisjonction())
+		if(isDisjonction() && sousFormule2.isConjonction())
 			return new Formule(CONJ,
 									new Formule(DISJ, sousFormule1, sousFormule2.sousFormule1),
 									new Formule(DISJ, sousFormule1, sousFormule2.sousFormule2)
 								);
 		
 		//4.16(X et Y) ou Z -> (X ou Z) et (Y ou Z)
-		if(isDisjonction() && sousFormule1.isConjonction() && !sousFormule2.isConjonction() && !sousFormule2.isDisjonction())
+		if(isDisjonction() && sousFormule1.isConjonction()){
 			return new Formule(CONJ,
 									new Formule(DISJ, sousFormule1.sousFormule1, sousFormule2),
 									new Formule(DISJ, sousFormule1.sousFormule2, sousFormule2)
 								);
-		
+		}
 		else return this;
 	}
+	
+	Formule miseEnCnf(){
+		/*Pour mettre une formule en Cnf on va effectuer les opérations suivantes :
+		 * _Supposer que la formule est en Cnf car si on appelle miseEnCnf ici elle sera appellée a chaque fois
+		 * _Appliquer les regles de mise en Cnf
+		 */
+		if(isCnf()){
+			return this;
+		}
+		else{//Donc là on est soit une conjonction, soit une disjonction
+			/*Là on a 2 cas : 
+			 * _Soit c'est une conjonction, dans ce cas le probleme ne se situe pas dans ce noeud de la formule
+			 * _Soit c'est une disjonction, dans ce cas il faut appliquer les regle de mise en DNF jusqu'à obtenir
+			 * soit un litteral soit une conjonction
+			 */
+			if(isDisjonction()){
+				appliqueReglesCnf();
+				return this;
+			}
+			else{//Donc c'est une conjonction
+				sousFormule1 = sousFormule1.miseEnCnf();
+				sousFormule2 = sousFormule2.miseEnCnf();
+				return this;
+			}
+			
+		}
+	}
+	
 	  /**/////////////////////////////////////////////////
 	 /**                    ACCESSEUR                  //
 	/**//////////////////////////////////////////////**/
