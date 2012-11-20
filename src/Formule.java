@@ -413,11 +413,60 @@ public class Formule {
 		String ligne = "";
 		Formule[] t = this.tableauLitteraux();
 		for(int i = 0; i < t.length; i++){
-			ligne += t[i].toString() + " ";
+			if(t[i].isVariable())
+				ligne += t[i].toString().charAt(1) + " ";
+			else
+				ligne += "-"+t[i].sousFormule1.toString().charAt(1) + " ";
 		}
 		ligne += "0";
 		
 		return ligne;
+	}
+	
+	/**construire une chaine qui correspond aux format DIMACS pour une forme normale conjonctive de la formule**/
+	String toDIMACS (){
+		String s = "p cnf ";
+		/*Pour finaliser la premiere ligne on doit inscrire : 
+		 * _1/le nombre de variables différentes qui entrent en jeu (on va considérer qu'elles sont numérotées de 0 à n)
+		 * _2/ainsi que le nombre de conjonctions
+		 */
+		
+		// 1)
+		s += (this.maxVar() + 1);
+		
+		// 2)
+		Formule curseur = this;
+		int compteur = 0;
+		if (sousFormule1 != null){//On vérifie bien que la premiere clause
+			compteur++;
+			if(curseur.sousFormule2 != null)
+				curseur = curseur.sousFormule2;
+		}
+		while(curseur.sousFormule2 != null){
+			curseur = curseur.sousFormule2;
+			compteur++;//Ce sont les formule "à gauche" des noeuds qu'on compte.
+		}
+		s += " "+ compteur + "\n";
+		
+		//Maintenant on parcours la formule pour renvoyer les clause disjonctives au format DIMACS
+		curseur = this;
+		if(curseur.sousFormule1 != null)
+			s += curseur.sousFormule1.ligneCnf() + "\n";
+		while(curseur.sousFormule2 != null && curseur.sousFormule2.isConjonction()){
+			curseur = curseur.sousFormule2;
+			s += curseur.sousFormule1.ligneCnf() + "\n";
+		}
+		if(curseur.sousFormule2 != null)
+			s += curseur.sousFormule2.ligneCnf() + "\n";
+					
+		return s;
+	}
+	
+	/**Enregistre un fichier txt avec le format DIMACS de la fonction **/
+	public void toDimacsTxt(){
+		Ecrivain ecrivain = new Ecrivain("Formule.txt");
+		ecrivain.writeln(this.miseEnNnf().miseEnCnf().toString());
+		ecrivain.flush();
 	}
 	  /**/////////////////////////////////////////////////
 	 /**                    ACCESSEUR                  //
