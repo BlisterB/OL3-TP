@@ -433,6 +433,26 @@ public class Formule {
 		return ligne;
 	}
 	
+	/**Renvoit le nombre de variable du tableau, en comptant le fait qu'il n'y a peut etre pas de var 1 ou 2 etc. */
+	int nombreVar(){
+		Formule[] t = this.tableauLitteraux();
+		int[] t1 = new int[t.length];
+		//On parcours t
+		for(int i = 0; i < t.length; i++){
+			if(isVariable()){
+				t1[t[i].numeroDeVariable] = t[i].numeroDeVariable;
+			}
+			else{//Si c'est une negation
+				t1[t[i].sousFormule1.numeroDeVariable] = t[i].sousFormule1.numeroDeVariable;
+			}
+		}
+		//On compte le nombre de case de t1 qui ont une variable différentes de 0 (donc le nombre de variable
+		int compteur = 0;
+		for(int i = 0; i < t1.length; i++){
+			if (t1[i] > 0) compteur ++;
+		}
+		return compteur;
+	}	
 	/**construire une chaine qui correspond aux format DIMACS pour une forme normale conjonctive de la formule**/
 	String toDIMACS (){
 		String s = "p cnf ";
@@ -442,7 +462,7 @@ public class Formule {
 		 */
 		
 		// 1)
-		s += (this.maxVar());
+		s += (this.nombreVar());
 		
 		// 2)
 		Formule curseur = this;
