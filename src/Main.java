@@ -5,15 +5,18 @@ public class Main {
 		///TP 4
 		//On crée les variable
 		Formule x1 = new Formule(0, 1); Formule x2 = new Formule(0, 2); Formule x3 = new Formule(0, 3); 
+		
+		//Création des formules du TP
 		Formule f1 = new Formule(2, x3,
 									new Formule(2, new Formule(3, x1, new Formule(1, x3)),
 													new Formule(3, x2,
 																	new Formule(3, x3,
 																					new Formule(1, x1)))));
-		System.out.println(f1.miseEnNnf().miseEnCnf().toString());
-		System.out.println(f1.miseEnNnf().miseEnCnf().toDIMACS());
 		f1.miseEnNnf().miseEnCnf().toDimacsTxt();
-
+		
+		Formule f2 = new Formule(2, x1, new Formule(1, x1));
+		System.out.println(f2.toDIMACS());
+		f2.toDimacsTxt();
 	}
 	
 	public void ancienTest(){

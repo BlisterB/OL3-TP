@@ -379,6 +379,11 @@ public class Formule {
 			t[0] = this;
 			return t;
 		}
+		else if (isNegation()){
+			Formule[] t = new Formule[1];
+			t[0] = this;
+			return t;
+		}
 		else{
 			//1
 			Formule curseur = this;//Nous sert � nous d�placer dans la formule
