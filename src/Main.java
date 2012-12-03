@@ -4,7 +4,7 @@ public class Main {
 	public static void main(String[] arg){
 		///TP 4
 		//On crée les variable
-		Formule x1 = new Formule(0, 1); Formule x2 = new Formule(0, 2); Formule x3 = new Formule(0, 3); 
+		Formule x1 = new Formule(0, 1); Formule x2 = new Formule(0, 2); Formule x3 = new Formule(0, 3); Formule x4 = new Formule(0, 4); Formule x5 = new Formule(0, 5); 
 		
 		//Création des formules du TP
 		Formule f1 = new Formule(2, x3,
@@ -12,11 +12,20 @@ public class Main {
 													new Formule(3, x2,
 																	new Formule(3, x3,
 																					new Formule(1, x1)))));
-		f1.miseEnNnf().miseEnCnf().toDimacsTxt();
 		
+		//
 		Formule f2 = new Formule(2, x3, new Formule(1, x3));
-		System.out.println(f2.toDIMACS());
-		f2.toDimacsTxt();
+		
+		//(x5 ou non x3 ou x1 ou non x2) et (non x5 ou non x1 ou x2 ou non x2)
+		Formule f3 = new Formule(2, new Formule(3, x5,
+												new Formule(3, new Formule(1, x3)
+																,new Formule(3, x1,
+																				new Formule(1, x2))))
+								  ,new Formule(3, new Formule(1, x5),
+										  		new Formule(3, new Formule(1, x1),
+										  						new Formule(3, x2, new Formule(1, x2)))));
+
+		
 	}
 	
 	public void ancienTest(){
