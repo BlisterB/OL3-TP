@@ -14,7 +14,7 @@ public class Main {
 																					new Formule(1, x1)))));
 		f1.miseEnNnf().miseEnCnf().toDimacsTxt();
 		
-		Formule f2 = new Formule(2, x1, new Formule(1, x1));
+		Formule f2 = new Formule(2, x3, new Formule(1, x3));
 		System.out.println(f2.toDIMACS());
 		f2.toDimacsTxt();
 	}
